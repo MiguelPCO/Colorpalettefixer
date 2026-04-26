@@ -8,6 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
+    passWithNoTests: true,
     coverage: {
       provider: "v8",
       include: ["lib/color/**"],
