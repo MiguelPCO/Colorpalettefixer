@@ -1,6 +1,9 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
-  "organizeImports": { "enabled": true },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "files": {
+    "includes": ["**", "!.next", "!node_modules", "!pnpm-lock.yaml"]
+  },
   "linter": {
     "enabled": true,
     "rules": { "recommended": true }
@@ -9,5 +12,13 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    },
+    "linter": {
+      "enabled": false
+    }
   }
 }
