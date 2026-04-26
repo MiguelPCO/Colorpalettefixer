@@ -2,6 +2,19 @@ import { wcagContrast } from './wcag'
 import { apcaContrast, apcaPolarity } from './apca'
 import type { RGB, ContrastReport, ColorId } from '../types'
 
+export function classifyContrast(
+  wcag: number,
+  apca: number,
+  cvdFail = false,
+): ContrastReport['classification'] {
+  const absLc = Math.abs(apca)
+  if (cvdFail) return 'fail-CVD'
+  if (wcag < 4.5) return 'fail'
+  if (wcag < 7 && absLc < 60) return 'warn'
+  if (wcag >= 7 && absLc >= 75) return 'pass-AAA'
+  return 'pass-AA'
+}
+
 export function buildContrastReport(
   fgId: ColorId,
   bgId: ColorId,

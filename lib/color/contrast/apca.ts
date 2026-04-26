@@ -5,7 +5,8 @@ import type { RGB } from '../types'
 export function apcaContrast(fg: RGB, bg: RGB): number {
   const fgY = sRGBtoY([fg.r, fg.g, fg.b])
   const bgY = sRGBtoY([bg.r, bg.g, bg.b])
-  return APCAcontrast(fgY, bgY) as number
+  const raw = APCAcontrast(fgY, bgY)
+  return typeof raw === 'string' ? parseFloat(raw) : raw
 }
 
 export function apcaPolarity(lc: number): 'light-on-dark' | 'dark-on-light' {
