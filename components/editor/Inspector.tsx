@@ -6,6 +6,8 @@ import { FindingsPanel } from './findings/FindingsPanel'
 import { RolesTab } from './roles/RolesTab'
 import { AccessibilityMatrix } from './accessibility/AccessibilityMatrix'
 import { PreviewTab } from './preview/PreviewTab'
+import { ExportPanel } from './export/ExportPanel'
+import type { ExportFormat } from './export/ExportPanel'
 
 function Placeholder({ label }: { label: string }) {
   return (
@@ -26,6 +28,10 @@ const TABS: { value: InspectorTab; label: string }[] = [
 export function Inspector() {
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
+
+  const handleExport = (format: ExportFormat) => {
+    console.log('export', format) // will be replaced in Plan 3
+  }
 
   return (
     <Tabs
@@ -54,7 +60,7 @@ export function Inspector() {
           <PreviewTab />
         </TabsContent>
         <TabsContent value="export" className="m-0 h-full">
-          <Placeholder label="Export" />
+          <ExportPanel onExport={handleExport} />
         </TabsContent>
       </div>
     </Tabs>
