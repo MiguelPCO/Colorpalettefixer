@@ -5,6 +5,7 @@ import { useUIStore, type InspectorTab } from '@/lib/store/uiStore'
 import { FindingsPanel } from './findings/FindingsPanel'
 import { RolesTab } from './roles/RolesTab'
 import { AccessibilityMatrix } from './accessibility/AccessibilityMatrix'
+import { PreviewTab } from './preview/PreviewTab'
 
 function Placeholder({ label }: { label: string }) {
   return (
@@ -50,7 +51,7 @@ export function Inspector() {
           <AccessibilityMatrix />
         </TabsContent>
         <TabsContent value="preview" className="m-0 h-full">
-          <Placeholder label="Preview" />
+          <PreviewTab />
         </TabsContent>
         <TabsContent value="export" className="m-0 h-full">
           <Placeholder label="Export" />
