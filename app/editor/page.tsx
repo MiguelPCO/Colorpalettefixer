@@ -8,9 +8,11 @@ import { useAutosave } from '@/lib/store/autosave'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore } from '@/lib/store/uiStore'
 import { runDiagnostics } from '@/lib/color/diagnostics/run'
+import { useEditorShortcuts } from '@/hooks/useEditorShortcuts'
 
 export default function EditorPage() {
   useAutosave()
+  useEditorShortcuts()
   const colors = usePaletteStore((s) => s.colors)
   const setFindings = usePaletteStore((s) => s.setFindings)
   const setIsAnalyzing = usePaletteStore((s) => s.setIsAnalyzing)
