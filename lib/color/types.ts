@@ -135,4 +135,13 @@ export interface GeneratedSystem {
   warning: GeneratedRamp
   error: GeneratedRamp
   info: GeneratedRamp
+  roles?: Partial<Record<Role, Color | null>>
+  contrastMatrix?: Record<string, ContrastMatrixEntry>
+}
+
+export interface ContrastMatrixEntry {
+  wcag: number
+  apca: number
+  wcagLevel: 'AAA' | 'AA' | 'AA_LARGE' | 'FAIL'
+  apcaPolarity: 'light-on-dark' | 'dark-on-light'
 }

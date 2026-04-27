@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUIStore, type InspectorTab } from '@/lib/store/uiStore'
 import { FindingsPanel } from './findings/FindingsPanel'
+import { RolesTab } from './roles/RolesTab'
 
 function Placeholder({ label }: { label: string }) {
   return (
@@ -42,7 +43,7 @@ export function Inspector() {
           <FindingsPanel />
         </TabsContent>
         <TabsContent value="roles" className="m-0 h-full">
-          <Placeholder label="Roles" />
+          <RolesTab />
         </TabsContent>
         <TabsContent value="accessibility" className="m-0 h-full">
           <Placeholder label="Accessibility" />
