@@ -36,4 +36,30 @@ describe('generateRamp', () => {
     const step9Rgb = oklchToRgb(ramp[8]!)
     expect(wcagContrast(step9Rgb, white)).toBeGreaterThanOrEqual(4.5)
   })
+
+  describe('dark mode', () => {
+    it('generates exactly 12 steps in dark mode', () => {
+      const ramp = generateRamp(brandMagenta, 'dark')
+      expect(ramp).toHaveLength(12)
+    })
+
+    it('lightness is monotonically increasing in dark mode', () => {
+      const ramp = generateRamp(brandMagenta, 'dark')
+      for (let i = 1; i < ramp.length; i++) {
+        expect(ramp[i]!.l).toBeGreaterThanOrEqual(ramp[i-1]!.l)
+      }
+    })
+
+    it('all steps are in sRGB gamut in dark mode', () => {
+      const ramp = generateRamp(brandMagenta, 'dark')
+      for (const step of ramp) {
+        expect(isInSrgb(step)).toBe(true)
+      }
+    })
+
+    it('step 9 uses brand hue', () => {
+      const ramp = generateRamp(brandMagenta, 'dark')
+      expect(ramp[8]!.h).toBeCloseTo(brandMagenta.h, 1)
+    })
+  })
 })
