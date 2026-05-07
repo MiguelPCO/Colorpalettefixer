@@ -8,7 +8,6 @@ import type { Finding } from '@/lib/color/types'
 vi.mock('@/lib/store/paletteStore', () => ({ usePaletteStore: vi.fn() }))
 vi.mock('@/lib/store/uiStore', () => ({ useUIStore: vi.fn() }))
 
-// Use actual Finding type fields
 const FINDING: Finding = {
   id: 'f1',
   type: 'very-similar',
@@ -33,19 +32,19 @@ describe('FindingsPanel', () => {
 
   it('shows empty state when no findings', () => {
     setupMocks([])
-    render(<FindingsPanel />)
+    render(<FindingsPanel onFix={vi.fn()} />)
     expect(screen.getByText(/no issues found/i)).toBeInTheDocument()
   })
 
   it('renders finding card', () => {
     setupMocks([FINDING])
-    render(<FindingsPanel />)
+    render(<FindingsPanel onFix={vi.fn()} />)
     expect(screen.getByText(/Colors c1 and c2/i)).toBeInTheDocument()
   })
 
   it('ignore button calls ignoreFinding', () => {
     const { ignoreFinding } = setupMocks([FINDING])
-    render(<FindingsPanel />)
+    render(<FindingsPanel onFix={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /ignore/i }))
     expect(ignoreFinding).toHaveBeenCalledWith('f1')
   })

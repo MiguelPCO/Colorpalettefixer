@@ -1,16 +1,38 @@
 "use client"
 
+import { useCallback } from 'react'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore, type FindingsFilter } from '@/lib/store/uiStore'
+import { oklchToHex, oklchToRgb, isInSrgb } from '@/lib/color/oklch/format'
 import { FindingCard } from './FindingCard'
+import type { Color, Finding } from '@/lib/color/types'
+
+interface FindingsPanelProps {
+  onFix: (colorId: string, patch: Partial<Color>) => void
+}
 
 const FILTERS: FindingsFilter[] = ['all', 'critical', 'warning', 'info']
 
-export function FindingsPanel() {
+export function FindingsPanel({ onFix }: FindingsPanelProps) {
   const findings = usePaletteStore((s) => s.findings)
   const ignoreFinding = usePaletteStore((s) => s.ignoreFinding)
   const filter = useUIStore((s) => s.findingsFilter)
   const setFilter = useUIStore((s) => s.setFindingsFilter)
+
+  const handleFix = useCallback(
+    (finding: Finding) => {
+      const { suggestion } = finding
+      if (!suggestion) return
+      const { targetColorId, newOklch } = suggestion
+      onFix(targetColorId, {
+        oklch: newOklch,
+        hex: oklchToHex(newOklch),
+        rgb: oklchToRgb(newOklch),
+        inGamutSrgb: isInSrgb(newOklch),
+      })
+    },
+    [onFix],
+  )
 
   const visible = filter === 'all'
     ? findings
@@ -38,7 +60,7 @@ export function FindingsPanel() {
           </p>
         ) : (
           visible.map((f) => (
-            <FindingCard key={f.id} finding={f} onIgnore={ignoreFinding} />
+            <FindingCard key={f.id} finding={f} onIgnore={ignoreFinding} onFix={handleFix} />
           ))
         )}
       </div>

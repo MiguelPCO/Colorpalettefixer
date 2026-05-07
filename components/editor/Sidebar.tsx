@@ -4,6 +4,7 @@ import { useUIStore } from '@/lib/store/uiStore'
 import { oklchToRgb, isInSrgb } from '@/lib/color/oklch/format'
 import { ColorSwatch } from './ColorSwatch'
 import { AddColorInput } from './AddColorInput'
+import { ThemeToggle } from './ThemeToggle'
 import type { Color, OKLCH } from '@/lib/color/types'
 
 export function Sidebar() {
@@ -30,9 +31,12 @@ export function Sidebar() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-border">
-        <h2 className="text-sm font-semibold">Palette</h2>
-        <p className="text-xs text-muted-foreground">{colors.length}/16 colors</p>
+      <div className="flex items-center justify-between p-3 border-b border-border">
+        <div>
+          <h2 className="text-sm font-semibold">Palette</h2>
+          <p className="text-xs text-muted-foreground">{colors.length}/16 colors</p>
+        </div>
+        <ThemeToggle />
       </div>
       <AddColorInput onAdd={handleAdd} />
       <div className="flex-1 overflow-y-auto p-2">

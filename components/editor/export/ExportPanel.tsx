@@ -3,7 +3,9 @@ import { Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useSessionStore } from '@/lib/store/sessionStore'
+import { generateCss, generateTailwind, generateDtcg, downloadText } from '@/lib/export/generators'
 import { cn } from '@/lib/utils'
+import type { GeneratedSystem } from '@/lib/color/types'
 
 export type ExportFormat = 'css' | 'dtcg' | 'tailwind' | 'scss' | 'style-dictionary' | 'figma' | 'ios' | 'android'
 
@@ -12,24 +14,31 @@ interface FormatDef {
   label: string
   description: string
   proOnly: boolean
+  filename: string
+  mime: string
 }
 
 const FORMATS: FormatDef[] = [
-  { id: 'css',              label: 'CSS Variables',    description: ':root { --color-primary: … }',       proOnly: false },
-  { id: 'dtcg',             label: 'DTCG W3C',         description: 'Design Token Community Group v1',    proOnly: false },
-  { id: 'tailwind',         label: 'Tailwind v4',      description: '@theme { --color-primary: … }',      proOnly: false },
-  { id: 'scss',             label: 'SCSS Map',          description: '$colors: (primary: …)',              proOnly: true  },
-  { id: 'style-dictionary', label: 'Style Dictionary', description: 'tokens.json for SD transforms',      proOnly: true  },
-  { id: 'figma',            label: 'Figma Tokens',      description: 'Figma Variables-compatible JSON',    proOnly: true  },
-  { id: 'ios',              label: 'iOS Swift',         description: 'UIColor extension + SwiftUI Color',  proOnly: true  },
-  { id: 'android',          label: 'Android XML',       description: 'res/values/colors.xml',             proOnly: true  },
+  { id: 'css',              label: 'CSS Variables',    description: ':root { --color-primary: … }',       proOnly: false, filename: 'tokens.css',  mime: 'text/css' },
+  { id: 'dtcg',             label: 'DTCG W3C',         description: 'Design Token Community Group v1',    proOnly: false, filename: 'tokens.json', mime: 'application/json' },
+  { id: 'tailwind',         label: 'Tailwind v4',      description: '@theme { --color-primary: … }',      proOnly: false, filename: 'theme.css',   mime: 'text/css' },
+  { id: 'scss',             label: 'SCSS Map',          description: '$colors: (primary: …)',              proOnly: true,  filename: 'tokens.scss', mime: 'text/plain' },
+  { id: 'style-dictionary', label: 'Style Dictionary', description: 'tokens.json for SD transforms',      proOnly: true,  filename: 'tokens.json', mime: 'application/json' },
+  { id: 'figma',            label: 'Figma Tokens',      description: 'Figma Variables-compatible JSON',    proOnly: true,  filename: 'figma.json',  mime: 'application/json' },
+  { id: 'ios',              label: 'iOS Swift',         description: 'UIColor extension + SwiftUI Color',  proOnly: true,  filename: 'Colors.swift',mime: 'text/plain' },
+  { id: 'android',          label: 'Android XML',       description: 'res/values/colors.xml',             proOnly: true,  filename: 'colors.xml',  mime: 'application/xml' },
 ]
 
-interface ExportPanelProps {
-  onExport: (format: ExportFormat) => void
+function getContent(format: ExportFormat, system: GeneratedSystem): string {
+  switch (format) {
+    case 'css':      return generateCss(system)
+    case 'tailwind': return generateTailwind(system)
+    case 'dtcg':     return generateDtcg(system)
+    default:         return ''
+  }
 }
 
-export function ExportPanel({ onExport }: ExportPanelProps) {
+export function ExportPanel() {
   const system = usePaletteStore((s) => s.generatedSystem)
   const isPro  = useSessionStore((s) => s.isPro)
 
@@ -41,6 +50,11 @@ export function ExportPanel({ onExport }: ExportPanelProps) {
         </p>
       </div>
     )
+  }
+
+  const handleDownload = (fmt: FormatDef) => {
+    const content = getContent(fmt.id, system)
+    downloadText(content, fmt.filename, fmt.mime)
   }
 
   return (
@@ -76,7 +90,7 @@ export function ExportPanel({ onExport }: ExportPanelProps) {
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs shrink-0"
-                onClick={() => onExport(fmt.id)}
+                onClick={() => handleDownload(fmt)}
                 aria-label={fmt.label}
               >
                 Download

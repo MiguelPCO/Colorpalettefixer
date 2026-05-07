@@ -6,10 +6,21 @@ import { useSessionStore } from '@/lib/store/sessionStore'
 
 vi.mock('@/lib/store/paletteStore', () => ({ usePaletteStore: vi.fn() }))
 vi.mock('@/lib/store/sessionStore', () => ({ useSessionStore: vi.fn() }))
+vi.mock('@/lib/export/generators', () => ({
+  generateCss: vi.fn(() => ':root {}'),
+  generateTailwind: vi.fn(() => '@theme {}'),
+  generateDtcg: vi.fn(() => '{}'),
+  downloadText: vi.fn(),
+}))
 
 const SYSTEM = {
-  brand: {} as any, neutral: {} as any, success: {} as any,
-  warning: {} as any, error: {} as any, info: {} as any,
+  brand: { light: [], dark: [] },
+  neutral: { light: [], dark: [] },
+  success: { light: [], dark: [] },
+  warning: { light: [], dark: [] },
+  error: { light: [], dark: [] },
+  info: { light: [], dark: [] },
+  roles: {},
 }
 
 const setupMocks = (isPro = false, hasSystem = true) => {
@@ -24,13 +35,13 @@ const setupMocks = (isPro = false, hasSystem = true) => {
 describe('ExportPanel', () => {
   it('shows empty state when no system', () => {
     setupMocks(false, false)
-    render(<ExportPanel onExport={vi.fn()} />)
+    render(<ExportPanel />)
     expect(screen.getByText(/analyze/i)).toBeInTheDocument()
   })
 
   it('renders free format buttons', () => {
     setupMocks()
-    render(<ExportPanel onExport={vi.fn()} />)
+    render(<ExportPanel />)
     expect(screen.getByRole('button', { name: /css variables/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /dtcg/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /tailwind/i })).toBeInTheDocument()
@@ -38,15 +49,15 @@ describe('ExportPanel', () => {
 
   it('pro formats show lock icon for free users', () => {
     setupMocks(false)
-    render(<ExportPanel onExport={vi.fn()} />)
+    render(<ExportPanel />)
     expect(screen.getAllByLabelText(/pro/i).length).toBeGreaterThan(0)
   })
 
-  it('calls onExport with format when clicking free format', () => {
-    const onExport = vi.fn()
+  it('clicking free format triggers download', async () => {
+    const { downloadText } = await import('@/lib/export/generators')
     setupMocks()
-    render(<ExportPanel onExport={onExport} />)
+    render(<ExportPanel />)
     fireEvent.click(screen.getByRole('button', { name: /css variables/i }))
-    expect(onExport).toHaveBeenCalledWith('css')
+    expect(downloadText).toHaveBeenCalled()
   })
 })

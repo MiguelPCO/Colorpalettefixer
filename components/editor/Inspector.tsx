@@ -7,14 +7,10 @@ import { RolesTab } from './roles/RolesTab'
 import { AccessibilityMatrix } from './accessibility/AccessibilityMatrix'
 import { PreviewTab } from './preview/PreviewTab'
 import { ExportPanel } from './export/ExportPanel'
-import type { ExportFormat } from './export/ExportPanel'
+import type { Color } from '@/lib/color/types'
 
-function Placeholder({ label }: { label: string }) {
-  return (
-    <div className="flex h-full items-center justify-center p-8">
-      <p className="text-sm text-muted-foreground">{label} (coming soon)</p>
-    </div>
-  )
+interface InspectorProps {
+  onFix: (colorId: string, patch: Partial<Color>) => void
 }
 
 const TABS: { value: InspectorTab; label: string }[] = [
@@ -25,13 +21,9 @@ const TABS: { value: InspectorTab; label: string }[] = [
   { value: 'export', label: 'Export' },
 ]
 
-export function Inspector() {
+export function Inspector({ onFix }: InspectorProps) {
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
-
-  const handleExport = (format: ExportFormat) => {
-    console.log('export', format) // will be replaced in Plan 3
-  }
 
   return (
     <Tabs
@@ -48,7 +40,7 @@ export function Inspector() {
       </TabsList>
       <div className="flex-1 overflow-y-auto">
         <TabsContent value="findings" className="m-0 h-full">
-          <FindingsPanel />
+          <FindingsPanel onFix={onFix} />
         </TabsContent>
         <TabsContent value="roles" className="m-0 h-full">
           <RolesTab />
@@ -60,7 +52,7 @@ export function Inspector() {
           <PreviewTab />
         </TabsContent>
         <TabsContent value="export" className="m-0 h-full">
-          <ExportPanel onExport={handleExport} />
+          <ExportPanel />
         </TabsContent>
       </div>
     </Tabs>
