@@ -2,16 +2,9 @@
 import { useCallback } from 'react'
 import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { usePaletteStore } from '@/lib/store/paletteStore'
+import { ALL_ROLES } from '@/lib/color/roles/constants'
 import { RoleSlot } from './RoleSlot'
 import type { Role } from '@/lib/color/types'
-
-// Use ONLY actual Role values from the Role type
-const ALL_ROLES: Role[] = [
-  'primary', 'secondary', 'accent', 'neutral',
-  'background', 'surface', 'border', 'text',
-  'success', 'warning', 'error', 'info',
-  'disabled', 'focus',
-]
 
 export function RolesTab() {
   const generatedSystem = usePaletteStore((s) => s.generatedSystem)
