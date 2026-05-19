@@ -1,24 +1,51 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { Loader2 } from 'lucide-react'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore } from '@/lib/store/uiStore'
 import { detectHarmony } from '@/lib/color/harmony/detect'
 import { Button } from '@/components/ui/button'
+import { ALL_ROLES } from '@/lib/color/roles/constants'
 import { cn } from '@/lib/utils'
+import type { Color, GeneratedSystem, Role } from '@/lib/color/types'
 
 interface MainCanvasProps {
   onAnalyze: () => void
 }
 
+function currentRole(system: GeneratedSystem | null, colorId: string): Role | null {
+  if (!system?.roles) return null
+  for (const [role, color] of Object.entries(system.roles)) {
+    if (color?.id === colorId) return role as Role
+  }
+  return null
+}
+
 export function MainCanvas({ onAnalyze }: MainCanvasProps) {
-  const colors = usePaletteStore((s) => s.colors)
-  const isAnalyzing = usePaletteStore((s) => s.isAnalyzing)
-  const selectedColorId = useUIStore((s) => s.selectedColorId)
-  const selectColor = useUIStore((s) => s.selectColor)
+  const colors             = usePaletteStore((s) => s.colors)
+  const isAnalyzing        = usePaletteStore((s) => s.isAnalyzing)
+  const generatedSystem    = usePaletteStore((s) => s.generatedSystem)
+  const setGeneratedSystem = usePaletteStore((s) => s.setGeneratedSystem)
+  const selectedColorId    = useUIStore((s) => s.selectedColorId)
+  const selectColor        = useUIStore((s) => s.selectColor)
 
   const harmony = useMemo(
     () => (colors.length >= 2 ? detectHarmony(colors.map((c) => c.oklch)) : null),
     [colors],
+  )
+
+  const handleRoleChange = useCallback(
+    (colorId: string, newRole: Role | '') => {
+      if (!generatedSystem) return
+      const color = colors.find((c) => c.id === colorId)
+      if (!color) return
+      const updatedRoles = { ...generatedSystem.roles }
+      for (const r of Object.keys(updatedRoles) as Role[]) {
+        if (updatedRoles[r]?.id === colorId) delete updatedRoles[r]
+      }
+      if (newRole) updatedRoles[newRole as Role] = color
+      setGeneratedSystem({ ...generatedSystem, roles: updatedRoles })
+    },
+    [generatedSystem, colors, setGeneratedSystem],
   )
 
   return (
@@ -59,22 +86,38 @@ export function MainCanvas({ onAnalyze }: MainCanvasProps) {
           style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}
         >
           {colors.map((c) => (
-            <button
+            <div
               key={c.id}
-              onClick={() => selectColor(c.id === selectedColorId ? null : c.id)}
               className={cn(
                 'flex flex-col overflow-hidden rounded-lg border border-black/10 transition-shadow',
                 c.id === selectedColorId && 'ring-2 ring-primary shadow-md',
               )}
             >
-              <span className="block h-20 w-full" style={{ backgroundColor: c.hex }} />
-              <span className="bg-background px-2 py-1.5 text-left">
+              <button
+                className="block h-20 w-full cursor-pointer"
+                style={{ backgroundColor: c.hex }}
+                aria-label={`Select color ${c.hex}`}
+                onClick={() => selectColor(c.id === selectedColorId ? null : c.id)}
+              />
+              <div className="bg-background px-2 py-1.5">
                 <span className="block font-mono text-xs">{c.hex}</span>
                 <span className={cn('block text-xs text-muted-foreground truncate', !c.name && 'invisible')}>
-                  {c.name ?? ' '}
+                  {c.name ?? ' '}
                 </span>
-              </span>
-            </button>
+                <select
+                  value={currentRole(generatedSystem, c.id) ?? ''}
+                  onChange={(e) => handleRoleChange(c.id, e.target.value as Role | '')}
+                  disabled={!generatedSystem}
+                  className="mt-1 w-full rounded border border-border bg-background text-[10px] text-muted-foreground disabled:opacity-40"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="">—</option>
+                  {ALL_ROLES.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           ))}
         </div>
       )}
