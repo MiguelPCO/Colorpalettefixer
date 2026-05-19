@@ -54,4 +54,15 @@ describe('AccessibilityMatrix', () => {
     // AAA appears as both the badge in the cell and the tier toggle button
     expect(screen.getAllByText('AAA').length).toBeGreaterThanOrEqual(1)
   })
+
+  it('shows role name labels in matrix headers', () => {
+    mockUIStore()
+    vi.mocked(usePaletteStore).mockImplementation((sel: any) =>
+      sel({ generatedSystem: SYSTEM }),
+    )
+    render(<AccessibilityMatrix />)
+    // Role name appears as text label in the matrix headers
+    expect(screen.getByText('text')).toBeInTheDocument()
+    expect(screen.getByText('background')).toBeInTheDocument()
+  })
 })

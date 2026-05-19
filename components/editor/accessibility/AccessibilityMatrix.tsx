@@ -6,11 +6,9 @@ import { ContrastCell } from './ContrastCell'
 import { simulateCvd } from '@/lib/color/cvd/simulate'
 import { wcagContrast } from '@/lib/color/contrast/wcag'
 import { apcaContrast, apcaPolarity } from '@/lib/color/contrast/apca'
+import { MATRIX_FG_ROLES, MATRIX_BG_ROLES } from '@/lib/color/roles/constants'
 import type { Role, Color, ContrastMatrixEntry } from '@/lib/color/types'
 import type { CvdMode, MatrixFontSize, MatrixWeight } from '@/lib/store/uiStore'
-
-const TEXT_ROLES: Role[] = ['text', 'neutral', 'disabled']
-const BG_ROLES: Role[]   = ['background', 'surface']
 
 const activeBtn = 'rounded px-2 py-0.5 text-xs font-semibold bg-foreground text-background'
 const inactiveBtn = 'rounded px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground'
@@ -31,6 +29,20 @@ const CVD_LABELS: { mode: CvdMode; label: string }[] = [
   { mode: 'protanopia', label: 'Protan' },
   { mode: 'tritanopia', label: 'Tritan' },
 ]
+
+function extractPairs(
+  roles: Partial<Record<Role, Color | null>> | undefined,
+  roleList: Role[],
+): { role: Role; color: Color }[] {
+  return Array.from(
+    new Map(
+      roleList
+        .map(r => (roles?.[r] ? { role: r, color: roles[r] as Color } : null))
+        .filter((p): p is { role: Role; color: Color } => p !== null)
+        .map(p => [p.color.id, p]),
+    ).values(),
+  )
+}
 
 export function AccessibilityMatrix() {
   const system          = usePaletteStore((s) => s.generatedSystem)
@@ -55,12 +67,8 @@ export function AccessibilityMatrix() {
     )
   }
 
-  const textColors = Array.from(
-    new Map(TEXT_ROLES.map((r) => system.roles?.[r]).filter(Boolean).map((c) => [(c as Color).id, c as Color])).values()
-  )
-  const bgColors = Array.from(
-    new Map(BG_ROLES.map((r) => system.roles?.[r]).filter(Boolean).map((c) => [(c as Color).id, c as Color])).values()
-  )
+  const fgPairs = extractPairs(system.roles, MATRIX_FG_ROLES)
+  const bgPairs = extractPairs(system.roles, MATRIX_BG_ROLES)
 
   return (
     <div className="p-3 space-y-4 overflow-auto">
@@ -92,55 +100,66 @@ export function AccessibilityMatrix() {
 
       <div>
         <h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          {contrastMode} — Tier {matrixTier} · Text on Backgrounds
+          {contrastMode} — Tier {matrixTier} · Role Contrast
           {cvdMode !== 'none' && (
             <span className="ml-1 normal-case font-normal opacity-70">· {cvdMode} (sim)</span>
           )}
         </h3>
-        {textColors.length === 0 || bgColors.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No text/background roles assigned yet.</p>
+        {fgPairs.length === 0 || bgPairs.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No roles assigned yet — run Analyze first.</p>
         ) : (
-          <div
-            className="grid gap-2"
-            style={{ gridTemplateColumns: `80px repeat(${bgColors.length}, 1fr)` }}
-          >
-            <div />
-            {bgColors.map((bg) => bg && (
-              <div key={bg.id} className="text-center">
-                <span className="mx-auto block h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: bg.hex }} />
-                <span className="font-mono text-[10px]">{bg.hex}</span>
-              </div>
-            ))}
-            {textColors.map((fg) => fg && (
-              <React.Fragment key={fg.id}>
-                <div className="flex items-center">
-                  <span className="mr-1 h-4 w-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: fg.hex }} />
-                  <span className="font-mono text-[10px]">{fg.hex}</span>
+          <>
+            <div
+              className="grid gap-2"
+              style={{ gridTemplateColumns: `96px repeat(${bgPairs.length}, 1fr)` }}
+            >
+              {/* Empty top-left cell */}
+              <div />
+              {/* BG column headers */}
+              {bgPairs.map(({ role, color }) => (
+                <div key={color.id} className="text-center">
+                  <span className="mx-auto block h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color.hex }} />
+                  <span className="block text-[10px] font-medium capitalize">{role}</span>
+                  <span className="block font-mono text-[10px] text-muted-foreground">{color.hex}</span>
                 </div>
-                {bgColors.map((bg) => {
-                  if (!bg) return null
-                  const key = `${fg.id}:${bg.id}`
-                  const report = cvdMode === 'none'
-                    ? system.contrastMatrix?.[key]
-                    : simulateReport(fg, bg, cvdMode)
-                  return report ? (
-                    <ContrastCell
-                      key={key}
-                      foreground={fg}
-                      background={bg}
-                      report={report}
-                      contrastMode={contrastMode}
-                      matrixTier={matrixTier}
-                      matrixFontSize={matrixFontSize}
-                      matrixWeight={matrixWeight}
-                    />
-                  ) : (
-                    <div key={key} className="rounded-md border border-dashed border-border p-2 text-center text-xs text-muted-foreground">—</div>
-                  )
-                })}
-              </React.Fragment>
-            ))}
-          </div>
+              ))}
+              {/* FG rows */}
+              {fgPairs.map(({ role, color }) => (
+                <React.Fragment key={color.id}>
+                  <div className="flex items-center gap-1">
+                    <span className="h-4 w-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: color.hex }} />
+                    <div className="min-w-0">
+                      <span className="block text-[10px] font-medium capitalize">{role}</span>
+                      <span className="block font-mono text-[10px] text-muted-foreground truncate">{color.hex}</span>
+                    </div>
+                  </div>
+                  {bgPairs.map(({ color: bg }) => {
+                    const key = `${color.id}:${bg.id}`
+                    const report = cvdMode === 'none'
+                      ? system.contrastMatrix?.[key]
+                      : simulateReport(color, bg, cvdMode)
+                    return report ? (
+                      <ContrastCell
+                        key={key}
+                        foreground={color}
+                        background={bg}
+                        report={report}
+                        contrastMode={contrastMode}
+                        matrixTier={matrixTier}
+                        matrixFontSize={matrixFontSize}
+                        matrixWeight={matrixWeight}
+                      />
+                    ) : (
+                      <div key={key} className="rounded-md border border-dashed border-border p-2 text-center text-xs text-muted-foreground">—</div>
+                    )
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+            <p className="mt-3 text-[10px] text-muted-foreground">
+              * border and focus roles use 3:1 non-text threshold (AA_LARGE)
+            </p>
+          </>
         )}
       </div>
     </div>
