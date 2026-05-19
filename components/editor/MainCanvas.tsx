@@ -43,7 +43,8 @@ export function MainCanvas({ onAnalyze }: MainCanvasProps) {
         if (updatedRoles[r]?.id === colorId) delete updatedRoles[r]
       }
       if (newRole) updatedRoles[newRole as Role] = color
-      setGeneratedSystem({ ...generatedSystem, roles: updatedRoles })
+      const { contrastMatrix, ...systemWithoutMatrix } = generatedSystem
+      setGeneratedSystem({ ...systemWithoutMatrix, roles: updatedRoles })
     },
     [generatedSystem, colors, setGeneratedSystem],
   )
@@ -105,6 +106,7 @@ export function MainCanvas({ onAnalyze }: MainCanvasProps) {
                   {c.name ?? ' '}
                 </span>
                 <select
+                  aria-label={`Assign role to ${c.hex}`}
                   value={currentRole(generatedSystem, c.id) ?? ''}
                   onChange={(e) => handleRoleChange(c.id, e.target.value as Role | '')}
                   disabled={!generatedSystem}

@@ -86,6 +86,11 @@ describe('MainCanvas', () => {
         roles: expect.objectContaining({ primary: C }),
       }),
     )
+    expect(setGeneratedSystem).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        contrastMatrix: expect.anything(),
+      }),
+    )
   })
 
   it('changing role unassigns color from its previous role', () => {
