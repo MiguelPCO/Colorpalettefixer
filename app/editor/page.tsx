@@ -9,6 +9,7 @@ import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore } from '@/lib/store/uiStore'
 import { runDiagnostics } from '@/lib/color/diagnostics/run'
 import { assignRoles } from '@/lib/color/roles/assign'
+import { MATRIX_FG_ROLES, MATRIX_BG_ROLES } from '@/lib/color/roles/constants'
 import { generateRamp } from '@/lib/color/ramp/generate'
 import { fixAlternatives } from '@/lib/color/fix/alternatives'
 import { oklchToHex, oklchToRgb, isInSrgb } from '@/lib/color/oklch/format'
@@ -29,9 +30,6 @@ function toRamp(oklch: OKLCH): GeneratedRamp {
 
 const FALLBACK_PRIMARY: OKLCH = { l: 0.5, c: 0.15, h: 258 }
 const FALLBACK_NEUTRAL: OKLCH = { l: 0.5, c: 0.01, h: 258 }
-
-const TEXT_ROLES: Role[] = ['text', 'neutral', 'disabled']
-const BG_ROLES: Role[] = ['background', 'surface']
 
 export default function EditorPage() {
   useAutosave()
@@ -140,10 +138,10 @@ export default function EditorPage() {
     }
 
     const contrastMatrix: Record<string, ContrastMatrixEntry> = {}
-    for (const textRole of TEXT_ROLES) {
+    for (const textRole of MATRIX_FG_ROLES) {
       const fg = rolesMap[textRole]
       if (!fg) continue
-      for (const bgRole of BG_ROLES) {
+      for (const bgRole of MATRIX_BG_ROLES) {
         const bg = rolesMap[bgRole]
         if (!bg) continue
         const wcagRatio = wcagContrast(fg.rgb, bg.rgb)
