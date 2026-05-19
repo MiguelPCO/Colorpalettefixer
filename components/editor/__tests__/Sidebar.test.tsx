@@ -54,7 +54,7 @@ describe('Sidebar', () => {
     const { addColor } = mockPaletteStore([])
     mockUIStore()
     render(<Sidebar />)
-    const input = screen.getByPlaceholderText(/#[0-9a-f]{6}/i)
+    const input = screen.getByPlaceholderText(/#hex/i)
     await userEvent.type(input, '#3b82f6{Enter}')
     expect(addColor).toHaveBeenCalledWith(
       expect.objectContaining({ hex: '#3b82f6' }),
@@ -65,7 +65,7 @@ describe('Sidebar', () => {
     const { addColor } = mockPaletteStore([])
     mockUIStore()
     render(<Sidebar />)
-    const input = screen.getByPlaceholderText(/#[0-9a-f]{6}/i)
+    const input = screen.getByPlaceholderText(/#hex/i)
     await userEvent.type(input, 'notahex{Enter}')
     expect(addColor).not.toHaveBeenCalled()
     expect(screen.getByRole('alert')).toBeInTheDocument()

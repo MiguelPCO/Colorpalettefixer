@@ -1,4 +1,5 @@
 import { wcagContrast } from '../contrast/wcag'
+import { apcaContrast } from '../contrast/apca'
 import { oklchToRgb, isInSrgb } from '../oklch/format'
 import { mapToSrgb } from '../oklch/gamut'
 import type { OKLCH, FixSuggestion, ColorId } from '../types'
@@ -8,10 +9,11 @@ interface FixConstraint {
   background: OKLCH
 }
 
-function satisfiesWcagAA(candidate: OKLCH, bg: OKLCH): boolean {
-  const candidateRgb = oklchToRgb(candidate)
+// Must satisfy BOTH thresholds to match the diagnostic rule (WCAG < 4.5 OR APCA |Lc| < 60)
+function satisfiesContrast(candidate: OKLCH, bg: OKLCH): boolean {
+  const fgRgb = oklchToRgb(candidate)
   const bgRgb = oklchToRgb(bg)
-  return wcagContrast(candidateRgb, bgRgb) >= 4.5
+  return wcagContrast(fgRgb, bgRgb) >= 4.5 && Math.abs(apcaContrast(fgRgb, bgRgb)) >= 60
 }
 
 const L_STEPS = [0.02, 0.04, 0.06, 0.08, 0.10, 0.13, 0.16, 0.20, 0.25, 0.30]
@@ -31,7 +33,7 @@ export function fixByLAdjust(
         h: color.h,
       }
       const mapped = isInSrgb(candidate) ? candidate : mapToSrgb(candidate)
-      if (satisfiesWcagAA(mapped, bg)) {
+      if (satisfiesContrast(mapped, bg)) {
         const dL = mapped.l - color.l
         return {
           targetColorId,
@@ -59,7 +61,7 @@ export function fixByHAdjust(
       h: (color.h + dH + 360) % 360,
     }
     const mapped = isInSrgb(candidate) ? candidate : mapToSrgb(candidate)
-    if (satisfiesWcagAA(mapped, bg)) {
+    if (satisfiesContrast(mapped, bg)) {
       return {
         targetColorId,
         newOklch: mapped,
@@ -85,7 +87,7 @@ export function fixByChadjust(
       h: color.h,
     }
     const mapped = isInSrgb(candidate) ? candidate : mapToSrgb(candidate)
-    if (satisfiesWcagAA(mapped, bg)) {
+    if (satisfiesContrast(mapped, bg)) {
       return {
         targetColorId,
         newOklch: mapped,
@@ -105,7 +107,7 @@ export function fixMinDelta(
   targetColorId: ColorId = 'unknown',
 ): FixSuggestion | null {
   const bg = constraint.background
-  if (satisfiesWcagAA(color, bg)) return null
+  if (satisfiesContrast(color, bg)) return null
   return (
     fixByLAdjust(color, bg, targetColorId) ??
     fixByHAdjust(color, bg, targetColorId) ??
