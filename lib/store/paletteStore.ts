@@ -13,6 +13,7 @@ interface PaletteActions {
   addColor: (color: Color) => void
   removeColor: (id: string) => void
   updateColor: (id: string, patch: Partial<Color>) => void
+  batchUpdateColors: (patches: { id: string; patch: Partial<Color> }[]) => void
   setFindings: (findings: Finding[]) => void
   setGeneratedSystem: (system: GeneratedSystem | null) => void
   setIsAnalyzing: (v: boolean) => void
@@ -39,6 +40,11 @@ export const usePaletteStore = create<PaletteState & PaletteActions>()(
         set((s) => ({
           colors: s.colors.map((c) => (c.id === id ? { ...c, ...patch } : c)),
         })),
+      batchUpdateColors: (patches) =>
+        set((s) => {
+          const patchMap = new Map(patches.map(({ id, patch }) => [id, patch]))
+          return { colors: s.colors.map((c) => patchMap.has(c.id) ? { ...c, ...patchMap.get(c.id) } : c) }
+        }),
       setFindings: (findings) => set({ findings }),
       setGeneratedSystem: (generatedSystem) => set({ generatedSystem }),
       setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),

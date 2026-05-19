@@ -1,5 +1,6 @@
 import { deltaEok } from '../cvd/deltaE'
 import { wcagContrast } from '../contrast/wcag'
+import { apcaContrast } from '../contrast/apca'
 import { temperatureBalance } from '../harmony/balance'
 import { FINDING_SEVERITY, FINDING_RULE_LABEL } from './severity'
 import { nanoid } from 'nanoid'
@@ -28,7 +29,7 @@ function getRuleLabel(type: FindingType): string {
     'double-accent':        'Two+ colors with C ≥ 0.15 without harmonic relationship',
     'ramp-gap':             'ΔL > 0.15 between adjacent same-hue colors',
     'temperature-imbalance': '|T| > 0.8 with no neutral to balance',
-    'contrast-failure':     'WCAG 2.2 SC 1.4.3 — Contrast Minimum (4.5:1 normal text)',
+    'contrast-failure':     'WCAG 4.5:1 or APCA |Lc| 60 — contrast minimum for normal text',
   }
   return labels[type]
 }
@@ -86,13 +87,25 @@ export function checkContrastFailure(colors: Color[]): Finding[] {
 
   for (let i = 0; i < colors.length; i++) {
     for (let j = i + 1; j < colors.length; j++) {
-      const ratio = wcagContrast(colors[i]!.rgb, colors[j]!.rgb)
-      // Only flag if both could be text/bg pair (one light, one dark)
-      const lDiff = Math.abs(colors[i]!.oklch.l - colors[j]!.oklch.l)
-      if (lDiff > 0.20 && ratio < 4.5) {
-        findings.push(finding('contrast-failure', [colors[i]!.id, colors[j]!.id],
-          `WCAG contrast ratio ${ratio.toFixed(2)}:1 < 4.5:1 required for normal text. Adjust lightness to meet AA.`))
+      const ci = colors[i]!
+      const cj = colors[j]!
+      const lDiff = Math.abs(ci.oklch.l - cj.oklch.l)
+      if (lDiff <= 0.20) continue
+      const ratio = wcagContrast(ci.rgb, cj.rgb)
+      const lc = apcaContrast(ci.rgb, cj.rgb)
+      const absLc = Math.abs(lc)
+      const wcagFailed = ratio < 4.5
+      const apcaFailed = absLc < 60
+      if (!wcagFailed && !apcaFailed) continue
+      let explanation: string
+      if (wcagFailed && apcaFailed) {
+        explanation = `WCAG ratio ${ratio.toFixed(2)}:1 < 4.5:1 and APCA |Lc| ${absLc.toFixed(1)} < 60 — both thresholds fail. Adjust lightness to meet AA.`
+      } else if (wcagFailed) {
+        explanation = `WCAG ratio ${ratio.toFixed(2)}:1 < 4.5:1 — APCA |Lc| ${absLc.toFixed(1)} passes but WCAG does not. Adjust lightness to meet AA.`
+      } else {
+        explanation = `APCA |Lc| ${absLc.toFixed(1)} < 60 — WCAG ratio ${ratio.toFixed(2)}:1 passes but APCA does not. Adjust lightness for perceptual contrast.`
       }
+      findings.push(finding('contrast-failure', [ci.id, cj.id], explanation))
     }
   }
   return findings
@@ -130,22 +143,39 @@ export function checkRampGap(colors: Color[]): Finding[] {
   return findings
 }
 
+function angularDist(a: number, b: number): number {
+  const d = ((a - b) % 360 + 360) % 360
+  return d > 180 ? 360 - d : d
+}
+
+function circularMeanHue(hues: number[]): number {
+  const sinSum = hues.reduce((s, h) => s + Math.sin(h * Math.PI / 180), 0)
+  const cosSum = hues.reduce((s, h) => s + Math.cos(h * Math.PI / 180), 0)
+  return ((Math.atan2(sinSum / hues.length, cosSum / hues.length) * 180 / Math.PI) + 360) % 360
+}
+
+function median(vals: number[]): number {
+  const sorted = [...vals].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!
+}
+
 export function checkOutlier(colors: Color[]): Finding[] {
   if (colors.length < 4) return []
-  // Very simplified outlier detection: color with very different hue from others
-  const hues = colors.map(c => c.oklch.h)
+  const chromatic = colors.filter(c => c.oklch.c > 0.1)
+  if (chromatic.length < 3) return []
+
+  const centroid = circularMeanHue(chromatic.map(c => c.oklch.h))
+  const dists = chromatic.map(c => angularDist(c.oklch.h, centroid))
+  const med = median(dists)
+  const mad = median(dists.map(d => Math.abs(d - med)))
+  const threshold = Math.max(med + 3 * mad, 45)
+
   const findings: Finding[] = []
-  
-  for (const c of colors) {
-    const others = colors.filter(x => x.id !== c.id)
-    const minHDiff = Math.min(...others.map(o => {
-        const diff = Math.abs(c.oklch.h - o.oklch.h) % 360
-        return diff > 180 ? 360 - diff : diff
-    }))
-    
-    if (minHDiff > 90 && c.oklch.c > 0.1) {
-      findings.push(finding('outlier', [c.id], 
-        `Color is a hue outlier (>${minHDiff.toFixed(0)}° from nearest color). Verify it fits the harmony.`))
+  for (let i = 0; i < chromatic.length; i++) {
+    if (dists[i]! > threshold) {
+      findings.push(finding('outlier', [chromatic[i]!.id],
+        `Hue outlier: ${dists[i]!.toFixed(0)}° from palette centroid (threshold ${threshold.toFixed(0)}°). Verify it fits the harmony.`))
     }
   }
   return findings

@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePaletteStore } from '@/lib/store/paletteStore'
@@ -29,10 +30,10 @@ const FORMATS: FormatDef[] = [
   { id: 'android',          label: 'Android XML',       description: 'res/values/colors.xml',             proOnly: true,  filename: 'colors.xml',  mime: 'application/xml' },
 ]
 
-function getContent(format: ExportFormat, system: GeneratedSystem): string {
+function getContent(format: ExportFormat, system: GeneratedSystem, prefix: string): string {
   switch (format) {
-    case 'css':      return generateCss(system)
-    case 'tailwind': return generateTailwind(system)
+    case 'css':      return generateCss(system, prefix)
+    case 'tailwind': return generateTailwind(system, prefix)
     case 'dtcg':     return generateDtcg(system)
     default:         return ''
   }
@@ -41,6 +42,7 @@ function getContent(format: ExportFormat, system: GeneratedSystem): string {
 export function ExportPanel() {
   const system = usePaletteStore((s) => s.generatedSystem)
   const isPro  = useSessionStore((s) => s.isPro)
+  const [prefix, setPrefix] = useState('--color-')
 
   if (!system) {
     return (
@@ -53,15 +55,24 @@ export function ExportPanel() {
   }
 
   const handleDownload = (fmt: FormatDef) => {
-    const content = getContent(fmt.id, system)
+    const content = getContent(fmt.id, system, prefix)
     downloadText(content, fmt.filename, fmt.mime)
   }
 
   return (
     <div className="p-3 space-y-2">
-      <p className="text-xs text-muted-foreground mb-3">
-        Choose a format to download your design tokens
-      </p>
+      <div className="flex items-center gap-2 mb-3">
+        <label htmlFor="export-prefix" className="text-xs text-muted-foreground shrink-0">CSS prefix</label>
+        <input
+          id="export-prefix"
+          type="text"
+          value={prefix}
+          onChange={(e) => setPrefix(e.target.value)}
+          className="flex-1 rounded border border-border bg-background px-2 py-0.5 font-mono text-xs"
+          placeholder="--color-"
+          spellCheck={false}
+        />
+      </div>
       {FORMATS.map((fmt) => {
         const locked = fmt.proOnly && !isPro
         return (

@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { Loader2 } from 'lucide-react'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore } from '@/lib/store/uiStore'
+import { detectHarmony } from '@/lib/color/harmony/detect'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -14,10 +16,23 @@ export function MainCanvas({ onAnalyze }: MainCanvasProps) {
   const selectedColorId = useUIStore((s) => s.selectedColorId)
   const selectColor = useUIStore((s) => s.selectColor)
 
+  const harmony = useMemo(
+    () => (colors.length >= 2 ? detectHarmony(colors.map((c) => c.oklch)) : null),
+    [colors],
+  )
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <span className="text-sm font-medium">Color Grid</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Color Grid</span>
+          {harmony && harmony.confidence !== 'none' && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground capitalize">
+              {harmony.template}
+              <span className="ml-1 opacity-60">({harmony.confidence})</span>
+            </span>
+          )}
+        </div>
         <Button
           size="sm"
           onClick={onAnalyze}

@@ -1,5 +1,5 @@
 'use client'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { EditorLayout } from '@/components/editor/EditorLayout'
 import { Sidebar } from '@/components/editor/Sidebar'
 import { MainCanvas } from '@/components/editor/MainCanvas'
@@ -12,8 +12,13 @@ import { assignRoles } from '@/lib/color/roles/assign'
 import { generateRamp } from '@/lib/color/ramp/generate'
 import { fixAlternatives } from '@/lib/color/fix/alternatives'
 import { oklchToHex, oklchToRgb, isInSrgb } from '@/lib/color/oklch/format'
+import { parseToOklch } from '@/lib/color/oklch/parse'
+import { wcagContrast } from '@/lib/color/contrast/wcag'
+import { apcaContrast, apcaPolarity } from '@/lib/color/contrast/apca'
 import { useEditorShortcuts } from '@/hooks/useEditorShortcuts'
-import type { Color, GeneratedRamp, GeneratedSystem, OKLCH, Role } from '@/lib/color/types'
+import { useAuth } from '@/hooks/useAuth'
+import { decodeShareHash } from '@/lib/share'
+import type { Color, ContrastMatrixEntry, GeneratedRamp, GeneratedSystem, OKLCH, Role } from '@/lib/color/types'
 
 function toRamp(oklch: OKLCH): GeneratedRamp {
   return {
@@ -25,9 +30,41 @@ function toRamp(oklch: OKLCH): GeneratedRamp {
 const FALLBACK_PRIMARY: OKLCH = { l: 0.5, c: 0.15, h: 258 }
 const FALLBACK_NEUTRAL: OKLCH = { l: 0.5, c: 0.01, h: 258 }
 
+const TEXT_ROLES: Role[] = ['text', 'neutral', 'disabled']
+const BG_ROLES: Role[] = ['background', 'surface']
+
 export default function EditorPage() {
   useAutosave()
   useEditorShortcuts()
+  useAuth()
+
+  const addColor = usePaletteStore((s) => s.addColor)
+  const reset = usePaletteStore((s) => s.reset)
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (!hash) return
+    const entries = decodeShareHash(hash)
+    if (!entries || entries.length === 0) return
+    const decoded: Color[] = []
+    for (const e of entries) {
+      const oklch: OKLCH = { l: e.l, c: e.c, h: e.h }
+      const hex = oklchToHex(oklch)
+      const rgb = oklchToRgb(oklch)
+      decoded.push({
+        id: crypto.randomUUID(),
+        hex,
+        oklch,
+        rgb,
+        inGamutSrgb: isInSrgb(oklch),
+        ...(e.n ? { name: e.n } : {}),
+      })
+    }
+    reset()
+    for (const c of decoded) addColor(c)
+    history.replaceState(null, '', window.location.pathname)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const colors = usePaletteStore((s) => s.colors)
   const setFindings = usePaletteStore((s) => s.setFindings)
@@ -101,6 +138,27 @@ export default function EditorPage() {
       info: toRamp(semanticOklch('info')),
       roles: rolesMap,
     }
+
+    const contrastMatrix: Record<string, ContrastMatrixEntry> = {}
+    for (const textRole of TEXT_ROLES) {
+      const fg = rolesMap[textRole]
+      if (!fg) continue
+      for (const bgRole of BG_ROLES) {
+        const bg = rolesMap[bgRole]
+        if (!bg) continue
+        const wcagRatio = wcagContrast(fg.rgb, bg.rgb)
+        const lc = apcaContrast(fg.rgb, bg.rgb)
+        const wcagLevel: ContrastMatrixEntry['wcagLevel'] =
+          wcagRatio >= 7 ? 'AAA' : wcagRatio >= 4.5 ? 'AA' : wcagRatio >= 3 ? 'AA_LARGE' : 'FAIL'
+        contrastMatrix[`${fg.id}:${bg.id}`] = {
+          wcag: wcagRatio,
+          apca: lc,
+          wcagLevel,
+          apcaPolarity: apcaPolarity(lc),
+        }
+      }
+    }
+    system.contrastMatrix = contrastMatrix
 
     setGeneratedSystem(system)
     setIsAnalyzing(false)

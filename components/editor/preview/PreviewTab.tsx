@@ -1,6 +1,11 @@
 'use client'
 import { usePaletteStore } from '@/lib/store/paletteStore'
+import { useUIStore } from '@/lib/store/uiStore'
 import type { GeneratedSystem } from '@/lib/color/types'
+import type { PreviewMode } from '@/lib/store/uiStore'
+
+const activeBtn  = 'rounded px-2 py-0.5 text-xs font-semibold bg-foreground text-background'
+const inactiveBtn = 'rounded px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -11,20 +16,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function SystemPreview({ system }: { system: GeneratedSystem }) {
+function SystemPreview({ system, previewMode }: { system: GeneratedSystem; previewMode: PreviewMode }) {
   const r = system.roles ?? {}
-  // Use actual Role values
+  const isDark = previewMode === 'dark'
+
   const primary = r.primary?.hex ?? '#6366f1'
-  const bg = r.background?.hex ?? '#ffffff'
-  const surface = r.surface?.hex ?? '#f9fafb'
-  const text = r.text?.hex ?? '#111827'
-  const textSub = r.neutral?.hex ?? '#6b7280'
-  const textDis = r.disabled?.hex ?? '#9ca3af'
-  const border = r.border?.hex ?? '#e5e7eb'
+  const bg      = isDark ? '#0f0f0f' : (r.background?.hex ?? '#ffffff')
+  const surface = isDark ? '#1c1c1c' : (r.surface?.hex ?? '#f9fafb')
+  const text    = isDark ? '#f0f0f0' : (r.text?.hex ?? '#111827')
+  const textSub = isDark ? '#a3a3a3' : (r.neutral?.hex ?? '#6b7280')
+  const textDis = isDark ? '#525252' : (r.disabled?.hex ?? '#9ca3af')
+  const border  = isDark ? '#2a2a2a' : (r.border?.hex ?? '#e5e7eb')
   const success = r.success?.hex ?? '#22c55e'
   const warning = r.warning?.hex ?? '#eab308'
-  const error = r.error?.hex ?? '#ef4444'
-  const info = r.info?.hex ?? '#3b82f6'
+  const error   = r.error?.hex ?? '#ef4444'
+  const info    = r.info?.hex ?? '#3b82f6'
 
   return (
     <div className="space-y-6 p-3" style={{ backgroundColor: bg, color: text }}>
@@ -104,7 +110,9 @@ function SystemPreview({ system }: { system: GeneratedSystem }) {
 }
 
 export function PreviewTab() {
-  const system = usePaletteStore((s) => s.generatedSystem)
+  const system      = usePaletteStore((s) => s.generatedSystem)
+  const previewMode = useUIStore((s) => s.previewMode)
+  const setPreviewMode = useUIStore((s) => s.setPreviewMode)
 
   if (!system) {
     return (
@@ -116,5 +124,18 @@ export function PreviewTab() {
     )
   }
 
-  return <SystemPreview system={system} />
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+        <span className="text-xs font-medium text-muted-foreground">Component Preview</span>
+        <div className="flex gap-1 rounded-md border border-border p-0.5">
+          <button className={previewMode === 'light' ? activeBtn : inactiveBtn} onClick={() => setPreviewMode('light')}>Light</button>
+          <button className={previewMode === 'dark'  ? activeBtn : inactiveBtn} onClick={() => setPreviewMode('dark')}>Dark</button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto">
+        <SystemPreview system={system} previewMode={previewMode} />
+      </div>
+    </div>
+  )
 }

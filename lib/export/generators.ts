@@ -1,49 +1,49 @@
 import { oklchToCss } from '@/lib/color/oklch/format'
 import type { GeneratedSystem, OKLCH } from '@/lib/color/types'
 
-function rampVars(name: string, steps: OKLCH[]): string {
+function rampVars(name: string, steps: OKLCH[], prefix: string): string {
   return steps
-    .map((step, i) => `  --color-${name}-${i + 1}: ${oklchToCss(step)};`)
+    .map((step, i) => `  ${prefix}${name}-${i + 1}: ${oklchToCss(step)};`)
     .join('\n')
 }
 
-function roleVars(system: GeneratedSystem): string {
+function roleVars(system: GeneratedSystem, prefix: string): string {
   const roles = system.roles ?? {}
   return Object.entries(roles)
     .filter(([, color]) => color !== null)
-    .map(([role, color]) => `  --color-${role}: ${oklchToCss(color!.oklch)};`)
+    .map(([role, color]) => `  ${prefix}${role}: ${oklchToCss(color!.oklch)};`)
     .join('\n')
 }
 
-export function generateCss(system: GeneratedSystem): string {
+export function generateCss(system: GeneratedSystem, prefix = '--color-'): string {
   const lines: string[] = [
     '/* ColorFixer — CSS Custom Properties */',
     ':root {',
     '  /* Roles */',
-    roleVars(system),
+    roleVars(system, prefix),
     '',
     '  /* Brand ramp */',
-    rampVars('brand', system.brand.light),
+    rampVars('brand', system.brand.light, prefix),
     '',
     '  /* Neutral ramp */',
-    rampVars('neutral', system.neutral.light),
+    rampVars('neutral', system.neutral.light, prefix),
     '}',
   ]
   return lines.join('\n')
 }
 
-export function generateTailwind(system: GeneratedSystem): string {
+export function generateTailwind(system: GeneratedSystem, prefix = '--color-'): string {
   const lines: string[] = [
     '/* ColorFixer — Tailwind v4 @theme */',
     '@theme {',
     '  /* Roles */',
-    roleVars(system),
+    roleVars(system, prefix),
     '',
     '  /* Brand ramp */',
-    rampVars('brand', system.brand.light),
+    rampVars('brand', system.brand.light, prefix),
     '',
     '  /* Neutral ramp */',
-    rampVars('neutral', system.neutral.light),
+    rampVars('neutral', system.neutral.light, prefix),
     '}',
   ]
   return lines.join('\n')

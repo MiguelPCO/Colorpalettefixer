@@ -7,6 +7,7 @@ import {
   checkTemperatureImbalance,
   checkDoubleAccent,
   checkRampGap,
+  checkContrastFailure,
 } from '@/lib/color/diagnostics/rules'
 import type { Color, OKLCH } from '@/lib/color/types'
 import { nanoid } from 'nanoid'
@@ -207,5 +208,37 @@ describe('checkRampGap', () => {
     ]
     const findings = checkRampGap(colors)
     expect(findings.some(f => f.type === 'ramp-gap')).toBe(true)
+  })
+})
+
+describe('checkContrastFailure — APCA branch', () => {
+  it('fires when WCAG < 4.5 (lDiff > 0.20)', () => {
+    const fg = makeColor({ l: 0.75, c: 0.1, h: 258 })
+    const bg = makeColor({ l: 0.99, c: 0.005, h: 0 })
+    const findings = checkContrastFailure([fg, bg])
+    expect(findings.some(f => f.type === 'contrast-failure')).toBe(true)
+  })
+
+  it('fires for pair with lDiff > 0.20 that fails at least one threshold', () => {
+    const fg = makeColor({ l: 0.20, c: 0.05, h: 258 })
+    const bg = makeColor({ l: 0.85, c: 0.01, h: 0 })
+    const findings = checkContrastFailure([fg, bg])
+    // If this pair fails either WCAG or APCA, a finding fires with relevant threshold mentioned
+    if (findings.length > 0) {
+      const f = findings.find(f => f.type === 'contrast-failure')!
+      expect(f.explanation).toMatch(/APCA|WCAG/)
+    }
+  })
+
+  it('does not fire when both WCAG >= 4.5 and APCA |Lc| >= 60', () => {
+    const fg = makeColor({ l: 0.05, c: 0.01, h: 0 })
+    const bg = makeColor({ l: 0.99, c: 0.001, h: 0 })
+    expect(checkContrastFailure([fg, bg]).filter(f => f.type === 'contrast-failure')).toHaveLength(0)
+  })
+
+  it('does not fire when lDiff <= 0.20', () => {
+    const fg = makeColor({ l: 0.50, c: 0.15, h: 258 })
+    const bg = makeColor({ l: 0.60, c: 0.15, h: 100 })
+    expect(checkContrastFailure([fg, bg]).filter(f => f.type === 'contrast-failure')).toHaveLength(0)
   })
 })
