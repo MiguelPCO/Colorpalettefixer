@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { parseToOklch } from '@/lib/color/oklch/parse'
+import { parseColorInput } from '@/lib/color/parseInput'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import type { OKLCH } from '@/lib/color/types'
-
-const HEX_RE = /^#([0-9a-fA-F]{6})$/
 
 interface AddColorInputProps {
   onAdd: (hex: string, oklch: OKLCH) => void
@@ -15,19 +13,14 @@ export function AddColorInput({ onAdd }: AddColorInputProps) {
   const [error, setError] = useState<string | null>(null)
 
   const submit = () => {
-    const hex = value.startsWith('#') ? value : `#${value}`
-    if (!HEX_RE.test(hex)) {
-      setError('Enter a valid 6-digit hex color')
-      return
-    }
-    const oklch = parseToOklch(hex)
-    if (!oklch) {
-      setError('Could not parse color')
+    const result = parseColorInput(value)
+    if (!result) {
+      setError('Invalid color — try #hex, rgb(r g b), hsl(h s% l%) or oklch(l c h)')
       return
     }
     setError(null)
     setValue('')
-    onAdd(hex.toLowerCase(), oklch)
+    onAdd(result.hex, result.oklch)
   }
 
   return (
@@ -37,9 +30,8 @@ export function AddColorInput({ onAdd }: AddColorInputProps) {
           value={value}
           onChange={(e) => { setValue(e.target.value); setError(null) }}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
-          placeholder="#3b82f6"
+          placeholder="#hex · rgb · hsl · oklch"
           className="font-mono text-xs h-8"
-          maxLength={7}
         />
         <Button size="sm" onClick={submit} className="h-8">Add</Button>
       </div>
