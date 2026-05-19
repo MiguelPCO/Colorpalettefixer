@@ -70,7 +70,9 @@ export function MainCanvas({ onAnalyze }: MainCanvasProps) {
               <span className="block h-20 w-full" style={{ backgroundColor: c.hex }} />
               <span className="bg-background px-2 py-1.5 text-left">
                 <span className="block font-mono text-xs">{c.hex}</span>
-                {c.name && <span className="block text-xs text-muted-foreground truncate">{c.name}</span>}
+                <span className={cn('block text-xs text-muted-foreground truncate', !c.name && 'invisible')}>
+                  {c.name ?? ' '}
+                </span>
               </span>
             </button>
           ))}

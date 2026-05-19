@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore } from '@/lib/store/uiStore'
 import { ContrastCell } from './ContrastCell'
@@ -54,8 +55,12 @@ export function AccessibilityMatrix() {
     )
   }
 
-  const textColors = TEXT_ROLES.map((r) => system.roles?.[r]).filter(Boolean) as Color[]
-  const bgColors   = BG_ROLES.map((r) => system.roles?.[r]).filter(Boolean) as Color[]
+  const textColors = Array.from(
+    new Map(TEXT_ROLES.map((r) => system.roles?.[r]).filter(Boolean).map((c) => [(c as Color).id, c as Color])).values()
+  )
+  const bgColors = Array.from(
+    new Map(BG_ROLES.map((r) => system.roles?.[r]).filter(Boolean).map((c) => [(c as Color).id, c as Color])).values()
+  )
 
   return (
     <div className="p-3 space-y-4 overflow-auto">
@@ -107,8 +112,8 @@ export function AccessibilityMatrix() {
               </div>
             ))}
             {textColors.map((fg) => fg && (
-              <>
-                <div key={`row-${fg.id}`} className="flex items-center">
+              <React.Fragment key={fg.id}>
+                <div className="flex items-center">
                   <span className="mr-1 h-4 w-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: fg.hex }} />
                   <span className="font-mono text-[10px]">{fg.hex}</span>
                 </div>
@@ -133,7 +138,7 @@ export function AccessibilityMatrix() {
                     <div key={key} className="rounded-md border border-dashed border-border p-2 text-center text-xs text-muted-foreground">—</div>
                   )
                 })}
-              </>
+              </React.Fragment>
             ))}
           </div>
         )}

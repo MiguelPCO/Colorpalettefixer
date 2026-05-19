@@ -1,32 +1,95 @@
-@theme inline {
-  /* Typography */
+/* ─── Raw CSS custom properties ───────────────────────────────────────────── */
+/* Defined here (not inside @theme inline) so [data-theme="dark"] can override */
+
+:root {
+  /* Static */
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* Brand (TBD after naming — using placeholder electric blue) */
-  --color-brand-1:  oklch(0.99 0.005 258);
-  --color-brand-9:  oklch(0.50 0.22 258);
-  --color-brand-12: oklch(0.18 0.06 258);
+  /* Light-mode semantic tokens */
+  --background:            oklch(0.99 0.002 258);
+  --foreground:            oklch(0.14 0.005 258);
+  --card:                  oklch(1.00 0.000 258);
+  --card-foreground:       oklch(0.14 0.005 258);
+  --popover:               oklch(1.00 0.000 258);
+  --popover-foreground:    oklch(0.14 0.005 258);
+  --muted:                 oklch(0.96 0.003 258);
+  --muted-foreground:      oklch(0.48 0.015 258);
+  --border:                oklch(0.88 0.006 258);
+  --input:                 oklch(0.88 0.006 258);
+  --primary:               oklch(0.52 0.22  258);
+  --primary-foreground:    oklch(0.99 0.002 258);
+  --secondary:             oklch(0.96 0.003 258);
+  --secondary-foreground:  oklch(0.14 0.005 258);
+  --accent:                oklch(0.96 0.003 258);
+  --accent-foreground:     oklch(0.14 0.005 258);
+  --destructive:           oklch(0.55 0.200  25);
+  --destructive-foreground: oklch(0.99 0.000   0);
+  --ring:                  oklch(0.52 0.22  258);
+  --success:               oklch(0.55 0.18  145);
+  --warning:               oklch(0.70 0.16   65);
+  --error:                 oklch(0.55 0.20   25);
+  --info:                  oklch(0.55 0.18  230);
+}
 
-  /* Neutral */
-  --color-neutral-1:  oklch(0.99 0.002 258);
-  --color-neutral-6:  oklch(0.78 0.008 258);
-  --color-neutral-11: oklch(0.35 0.015 258);
-  --color-neutral-12: oklch(0.14 0.005 258);
+/* ─── Dark mode overrides ──────────────────────────────────────────────────── */
+/* NOT pure black — layered dark grays with a cool blue tint (hue 258).       */
+/* bg-app 0.10 → panel 0.13 → card 0.16 → muted/hover 0.20                   */
+[data-theme="dark"] {
+  --background:            oklch(0.20 0.006 258);   /* dark gray, not black — ~#27292e */
+  --foreground:            oklch(0.93 0.010 258);   /* near-white, slightly cool */
+  --card:                  oklch(0.23 0.007 258);   /* panel / sidebar surface */
+  --card-foreground:       oklch(0.93 0.010 258);
+  --popover:               oklch(0.23 0.007 258);
+  --popover-foreground:    oklch(0.93 0.010 258);
+  --muted:                 oklch(0.27 0.008 258);   /* subtle raised surface */
+  --muted-foreground:      oklch(0.60 0.012 258);   /* secondary text */
+  --border:                oklch(0.32 0.008 258);   /* subtle border */
+  --input:                 oklch(0.26 0.008 258);   /* input bg */
+  --primary:               oklch(0.65 0.22  258);   /* brighter blue on dark bg */
+  --primary-foreground:    oklch(0.20 0.006 258);
+  --secondary:             oklch(0.27 0.008 258);
+  --secondary-foreground:  oklch(0.93 0.010 258);
+  --accent:                oklch(0.30 0.009 258);   /* hover/highlight */
+  --accent-foreground:     oklch(0.93 0.010 258);
+  --destructive:           oklch(0.65 0.200  25);
+  --destructive-foreground: oklch(0.20 0.000   0);
+  --ring:                  oklch(0.65 0.22  258);
+  --success:               oklch(0.62 0.18  145);
+  --warning:               oklch(0.75 0.16   65);
+  --error:                 oklch(0.65 0.20   25);
+  --info:                  oklch(0.62 0.18  230);
+}
 
-  /* Semantic */
-  --color-bg-app:     var(--color-neutral-1);
-  --color-bg-surface: oklch(0.97 0.003 258);
-  --color-text-default: var(--color-neutral-12);
-  --color-text-muted: var(--color-neutral-11);
-  --color-border-default: var(--color-neutral-6);
-  --color-border-focus: var(--color-brand-9);
+/* ─── @theme inline — maps raw vars → Tailwind utilities ──────────────────── */
+/* bg-background uses var(--background) at runtime → respects dark override    */
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 
-  /* Feedback */
-  --color-success: oklch(0.55 0.18 145);
-  --color-warning: oklch(0.70 0.16 65);
-  --color-error:   oklch(0.55 0.20 25);
-  --color-info:    oklch(0.55 0.18 230);
+  --color-background:           var(--background);
+  --color-foreground:           var(--foreground);
+  --color-card:                 var(--card);
+  --color-card-foreground:      var(--card-foreground);
+  --color-popover:              var(--popover);
+  --color-popover-foreground:   var(--popover-foreground);
+  --color-muted:                var(--muted);
+  --color-muted-foreground:     var(--muted-foreground);
+  --color-border:               var(--border);
+  --color-input:                var(--input);
+  --color-primary:              var(--primary);
+  --color-primary-foreground:   var(--primary-foreground);
+  --color-secondary:            var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent:               var(--accent);
+  --color-accent-foreground:    var(--accent-foreground);
+  --color-destructive:          var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring:                 var(--ring);
+  --color-success:              var(--success);
+  --color-warning:              var(--warning);
+  --color-error:                var(--error);
+  --color-info:                 var(--info);
 
   /* Spacing (base 4px) */
   --spacing-1: 4px;
@@ -47,16 +110,7 @@
   --ease-default: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Dark mode */
-[data-theme="dark"] {
-  --color-bg-app:     oklch(0.08 0.005 258);
-  --color-bg-surface: oklch(0.11 0.005 258);
-  --color-text-default: oklch(0.94 0.01 258);
-  --color-text-muted: oklch(0.72 0.015 258);
-  --color-border-default: oklch(0.26 0.008 258);
-}
-
-/* Reduced motion */
+/* ─── Reduced motion ───────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

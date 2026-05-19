@@ -91,7 +91,7 @@ export function ColorSwatch({ color, selected, onSelect, onRemove, onUpdate }: C
             onBlur={commitName}
             onKeyDown={(e) => { if (e.key === 'Enter') commitName() }}
             placeholder="name"
-            className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            className="min-w-0 flex-1 max-w-[7rem] rounded border border-border bg-background px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
             aria-label="Color name"
           />
         </div>
