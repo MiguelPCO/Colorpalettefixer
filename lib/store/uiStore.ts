@@ -38,11 +38,6 @@ interface UIActions {
   reset: () => void
 }
 
-function getInitialInspectorWidth(): number {
-  if (typeof window === 'undefined') return 380
-  return Number(localStorage.getItem('cpf-inspector-width')) || 380
-}
-
 const INITIAL: UIState = {
   activeTab: 'findings',
   selectedColorId: null,
@@ -59,7 +54,6 @@ const INITIAL: UIState = {
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
   ...INITIAL,
-  inspectorWidth: getInitialInspectorWidth(),
   setActiveTab: (activeTab) => set({ activeTab }),
   selectColor: (selectedColorId) => set({ selectedColorId }),
   togglePanel: () => set((s) => ({ isPanelOpen: !s.isPanelOpen })),
