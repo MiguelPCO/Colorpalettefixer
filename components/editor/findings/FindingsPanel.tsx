@@ -96,10 +96,12 @@ export function FindingsPanel({ onFix }: FindingsPanelProps) {
               onToggle={() => setOpenFindingId(openFindingId === f.id ? null : f.id)}
               onIgnore={ignoreFinding}
               onFix={handleFix}
-              currentHex={f.suggestion
-                ? colors.find((c) => c.id === f.suggestion!.targetColorId)?.hex
-                : undefined
-              }
+              {...(() => {
+                const hex = f.suggestion
+                  ? colors.find((c) => c.id === f.suggestion!.targetColorId)?.hex
+                  : undefined
+                return hex !== undefined ? { currentHex: hex } : {}
+              })()}
             />
           ))
         )}

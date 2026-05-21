@@ -88,8 +88,8 @@ describe('FindingsPanel', () => {
     render(<FindingsPanel onFix={vi.fn()} />)
 
     // Open first card
-    const [firstBtn] = screen.getAllByRole('button', { expanded: false })
-    fireEvent.click(firstBtn)
+    const buttons = screen.getAllByRole('button', { expanded: false })
+    fireEvent.click(buttons[0]!)
     expect(screen.getByText(FINDING.explanation)).toBeInTheDocument()
 
     // Open second card — first should close
