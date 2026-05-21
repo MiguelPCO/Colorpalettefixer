@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useCallback, type ReactNode } from 'react'
 import { useUIStore } from '@/lib/store/uiStore'
 
 interface EditorLayoutProps {
@@ -13,9 +13,11 @@ export function EditorLayout({ sidebar, main, inspector }: EditorLayoutProps) {
   const inspectorWidth = useUIStore((s) => s.inspectorWidth)
   const setInspectorWidth = useUIStore((s) => s.setInspectorWidth)
 
-  function handleMouseDown(e: React.MouseEvent) {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
     const startX = e.clientX
     const startWidth = inspectorWidth
+    document.body.style.cursor = 'col-resize'
 
     function onMove(ev: MouseEvent) {
       const delta = startX - ev.clientX
@@ -23,13 +25,14 @@ export function EditorLayout({ sidebar, main, inspector }: EditorLayoutProps) {
     }
 
     function onUp() {
+      document.body.style.cursor = ''
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('mouseup', onUp)
     }
 
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
-  }
+  }, [inspectorWidth, setInspectorWidth])
 
   return (
     <div
