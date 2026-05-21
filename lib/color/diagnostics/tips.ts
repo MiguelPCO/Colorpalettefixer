@@ -7,8 +7,8 @@ export interface FindingTip {
 
 export const FINDING_TIPS: Record<FindingType, FindingTip> = {
   'contrast-failure': {
-    tip: 'Lower L in OKLCH for the text color (target L < 0.55 on white backgrounds) or increase the background L. Re-analyze after each adjustment to verify the new ratio.',
-    wcagUrl: 'https://www.w3.org/TR/WCAG22/#contrast-minimum',
+    tip: 'Lower L in OKLCH for the text color (target L < 0.55 on white backgrounds) or increase the background L. Re-check the ratio on each iteration to verify it meets the target.',
+    wcagUrl: 'https://www.w3.org/TR/WCAG22/#wcag-contrast-minimum',
   },
   'redundant': {
     tip: 'Merge the duplicate roles into one color, or differentiate them by shifting L by ≥ 0.05 or H by ≥ 15° so each color serves a distinct visual purpose.',
