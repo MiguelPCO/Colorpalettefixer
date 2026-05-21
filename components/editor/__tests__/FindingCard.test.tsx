@@ -90,7 +90,7 @@ describe('FindingCard', () => {
       />,
     )
     const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', expect.stringContaining('w3.org'))
+    expect(link).toHaveAttribute('href', 'https://www.w3.org/TR/WCAG22/#contrast-minimum')
   })
 
   it('expanded card shows before/after swatches when suggestion exists', () => {
