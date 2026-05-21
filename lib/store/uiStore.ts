@@ -20,6 +20,7 @@ interface UIState {
   previewMode: PreviewMode
   matrixFontSize: MatrixFontSize
   matrixWeight: MatrixWeight
+  inspectorWidth: number
 }
 
 interface UIActions {
@@ -33,7 +34,13 @@ interface UIActions {
   setPreviewMode: (mode: PreviewMode) => void
   setMatrixFontSize: (size: MatrixFontSize) => void
   setMatrixWeight: (weight: MatrixWeight) => void
+  setInspectorWidth: (w: number) => void
   reset: () => void
+}
+
+function getInitialInspectorWidth(): number {
+  if (typeof window === 'undefined') return 380
+  return Number(localStorage.getItem('cpf-inspector-width')) || 380
 }
 
 const INITIAL: UIState = {
@@ -47,10 +54,12 @@ const INITIAL: UIState = {
   previewMode: 'light',
   matrixFontSize: 'normal',
   matrixWeight: 'normal',
+  inspectorWidth: 380,
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
   ...INITIAL,
+  inspectorWidth: getInitialInspectorWidth(),
   setActiveTab: (activeTab) => set({ activeTab }),
   selectColor: (selectedColorId) => set({ selectedColorId }),
   togglePanel: () => set((s) => ({ isPanelOpen: !s.isPanelOpen })),
@@ -61,5 +70,11 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   setPreviewMode: (previewMode) => set({ previewMode }),
   setMatrixFontSize: (matrixFontSize) => set({ matrixFontSize }),
   setMatrixWeight: (matrixWeight) => set({ matrixWeight }),
-  reset: () => set(INITIAL),
+  setInspectorWidth: (w) => {
+    set({ inspectorWidth: w })
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cpf-inspector-width', String(w))
+    }
+  },
+  reset: () => set((s) => ({ ...INITIAL, inspectorWidth: s.inspectorWidth })),
 }))
