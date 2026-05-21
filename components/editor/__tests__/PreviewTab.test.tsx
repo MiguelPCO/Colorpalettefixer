@@ -1,18 +1,24 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { PreviewTab } from '../preview/PreviewTab'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 
 vi.mock('@/lib/store/paletteStore', () => ({ usePaletteStore: vi.fn() }))
 
-// Use actual Role values
-const ROLES = {
-  primary: { id: 'p', hex: '#3b82f6', oklch: { l: 0.6, c: 0.2, h: 264 }, rgb: { r: 59, g: 130, b: 246 }, inGamutSrgb: true },
-  background: { id: 'b', hex: '#ffffff', oklch: { l: 1, c: 0, h: 0 }, rgb: { r: 255, g: 255, b: 255 }, inGamutSrgb: true },
-  text: { id: 't', hex: '#1a1a1a', oklch: { l: 0.15, c: 0.02, h: 280 }, rgb: { r: 26, g: 26, b: 26 }, inGamutSrgb: true },
-  success: { id: 's', hex: '#22c55e', oklch: { l: 0.7, c: 0.2, h: 145 }, rgb: { r: 34, g: 197, b: 94 }, inGamutSrgb: true },
-  warning: { id: 'w', hex: '#eab308', oklch: { l: 0.8, c: 0.18, h: 85 }, rgb: { r: 234, g: 179, b: 8 }, inGamutSrgb: true },
-  error: { id: 'e', hex: '#ef4444', oklch: { l: 0.55, c: 0.22, h: 27 }, rgb: { r: 239, g: 68, b: 68 }, inGamutSrgb: true },
+const SYSTEM = {
+  brand: { light: [], dark: [] },
+  neutral: { light: [], dark: [] },
+  success: { light: [], dark: [] },
+  warning: { light: [], dark: [] },
+  error: { light: [], dark: [] },
+  info: { light: [], dark: [] },
+  roles: {
+    primary:    { id: 'p', hex: '#3b82f6', oklch: { l: 0.6, c: 0.2, h: 264 }, rgb: { r: 59, g: 130, b: 246 }, inGamutSrgb: true },
+    background: { id: 'bg', hex: '#ffffff', oklch: { l: 1, c: 0, h: 0 }, rgb: { r: 255, g: 255, b: 255 }, inGamutSrgb: true },
+    success:    { id: 's', hex: '#22c55e', oklch: { l: 0.7, c: 0.2, h: 145 }, rgb: { r: 34, g: 197, b: 94 }, inGamutSrgb: true },
+    warning:    { id: 'w', hex: '#eab308', oklch: { l: 0.8, c: 0.18, h: 85 }, rgb: { r: 234, g: 179, b: 8 }, inGamutSrgb: true },
+    error:      { id: 'e', hex: '#ef4444', oklch: { l: 0.55, c: 0.22, h: 27 }, rgb: { r: 239, g: 68, b: 68 }, inGamutSrgb: true },
+  },
 }
 
 describe('PreviewTab', () => {
@@ -24,19 +30,47 @@ describe('PreviewTab', () => {
     expect(screen.getByText(/analyze/i)).toBeInTheDocument()
   })
 
-  it('renders button preview section', () => {
+  it('renders landing scene by default', () => {
     vi.mocked(usePaletteStore).mockImplementation((sel: any) =>
-      sel({ generatedSystem: { roles: ROLES } }),
+      sel({ generatedSystem: SYSTEM }),
     )
     render(<PreviewTab />)
-    expect(screen.getByText(/buttons/i)).toBeInTheDocument()
+    expect(screen.getByTestId('landing-scene')).toBeInTheDocument()
   })
 
-  it('renders badge section with semantic states', () => {
+  it('switches to dashboard scene on tab click', () => {
     vi.mocked(usePaletteStore).mockImplementation((sel: any) =>
-      sel({ generatedSystem: { roles: ROLES } }),
+      sel({ generatedSystem: SYSTEM }),
     )
     render(<PreviewTab />)
-    expect(screen.getByText(/badges/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /dashboard/i }))
+    expect(screen.getByTestId('dashboard-scene')).toBeInTheDocument()
+  })
+
+  it('switches to mobile scene on tab click', () => {
+    vi.mocked(usePaletteStore).mockImplementation((sel: any) =>
+      sel({ generatedSystem: SYSTEM }),
+    )
+    render(<PreviewTab />)
+    fireEvent.click(screen.getByRole('button', { name: /mobile/i }))
+    expect(screen.getByTestId('mobile-scene')).toBeInTheDocument()
+  })
+
+  it('switches to components scene on tab click', () => {
+    vi.mocked(usePaletteStore).mockImplementation((sel: any) =>
+      sel({ generatedSystem: SYSTEM }),
+    )
+    render(<PreviewTab />)
+    fireEvent.click(screen.getByRole('button', { name: /components/i }))
+    expect(screen.getByTestId('system-preview')).toBeInTheDocument()
+  })
+
+  it('light/dark toggle is always visible', () => {
+    vi.mocked(usePaletteStore).mockImplementation((sel: any) =>
+      sel({ generatedSystem: SYSTEM }),
+    )
+    render(<PreviewTab />)
+    expect(screen.getByRole('button', { name: /light/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /dark/i })).toBeInTheDocument()
   })
 })

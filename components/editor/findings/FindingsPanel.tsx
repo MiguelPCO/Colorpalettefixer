@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { usePaletteStore } from '@/lib/store/paletteStore'
 import { useUIStore, type FindingsFilter } from '@/lib/store/uiStore'
 import { oklchToHex, oklchToRgb, isInSrgb } from '@/lib/color/oklch/format'
@@ -16,10 +16,13 @@ const FILTERS: FindingsFilter[] = ['all', 'critical', 'warning', 'info']
 
 export function FindingsPanel({ onFix }: FindingsPanelProps) {
   const findings = usePaletteStore((s) => s.findings)
+  const colors = usePaletteStore((s) => s.colors)
   const batchUpdateColors = usePaletteStore((s) => s.batchUpdateColors)
   const ignoreFinding = usePaletteStore((s) => s.ignoreFinding)
   const filter = useUIStore((s) => s.findingsFilter)
   const setFilter = useUIStore((s) => s.setFindingsFilter)
+
+  const [openFindingId, setOpenFindingId] = useState<string | null>(null)
 
   const handleFix = useCallback(
     (finding: Finding) => {
@@ -86,7 +89,20 @@ export function FindingsPanel({ onFix }: FindingsPanelProps) {
           </p>
         ) : (
           visible.map((f) => (
-            <FindingCard key={f.id} finding={f} onIgnore={ignoreFinding} onFix={handleFix} />
+            <FindingCard
+              key={f.id}
+              finding={f}
+              isOpen={openFindingId === f.id}
+              onToggle={() => setOpenFindingId(openFindingId === f.id ? null : f.id)}
+              onIgnore={ignoreFinding}
+              onFix={handleFix}
+              {...(() => {
+                const hex = f.suggestion
+                  ? colors.find((c) => c.id === f.suggestion!.targetColorId)?.hex
+                  : undefined
+                return hex !== undefined ? { currentHex: hex } : {}
+              })()}
+            />
           ))
         )}
       </div>
