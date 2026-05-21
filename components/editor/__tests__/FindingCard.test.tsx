@@ -90,7 +90,7 @@ describe('FindingCard', () => {
       />,
     )
     const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', expect.stringContaining('wcag'))
+    expect(link).toHaveAttribute('href', expect.stringContaining('w3.org'))
   })
 
   it('expanded card shows before/after swatches when suggestion exists', () => {
